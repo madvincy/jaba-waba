@@ -372,7 +372,7 @@ export default function ShopPage() {
                         </div>
                       </CardContent>
                       <CardFooter className="gap-3">
-                        <Button className="w-full" onClick={() => dispatch(addToCart(product.id))}>
+                        <Button className="w-full" onClick={() => dispatch(addToCart({ productId: product.id }))}>
                           Add to cart
                         </Button>
                         <span className="text-sm text-slate-500 dark:text-slate-400">Stock: {product.stock}</span>
@@ -472,26 +472,33 @@ export default function ShopPage() {
                               </Button>
                             </div>
                             <div className="mt-4 flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-950">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-9 w-9 rounded-full"
-                                  onClick={() => dispatch(updateCartQuantity({ productId: item.id, quantity: item.quantity - 1 }))}
-                                >
-                                  −
-                                </Button>
-                                <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-9 w-9 rounded-full"
-                                  onClick={() => dispatch(updateCartQuantity({ productId: item.id, quantity: item.quantity + 1 }))}
-                                >
-                                  +
-                                </Button>
+                              <div>
+                                {item.selectedVariantId && (
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    {item.variants?.find((v) => v.id === item.selectedVariantId)?.name || "Selected variant"}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-950">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 rounded-full"
+                                    onClick={() => dispatch(updateCartQuantity({ productId: item.id, quantity: item.quantity - 1 }))}
+                                  >
+                                    −
+                                  </Button>
+                                  <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 rounded-full"
+                                    onClick={() => dispatch(updateCartQuantity({ productId: item.id, quantity: item.quantity + 1 }))}
+                                  >
+                                    +
+                                  </Button>
+                                </div>
                               </div>
-                              <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                              <p className="font-semibold">${((item.variantPrice ?? item.price) * item.quantity).toFixed(2)}</p>
                             </div>
                           </div>
                         </div>

@@ -264,7 +264,7 @@ export default function HomePage() {
                   <Button
                     size="sm"
                     className="bg-green-600 hover:bg-green-700 text-white rounded-lg"
-                    onClick={() => dispatch(addToCart(product.id))}
+                    onClick={() => dispatch(addToCart({ productId: product.id }))}
                   >
                     Add
                   </Button>

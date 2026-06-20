@@ -352,7 +352,7 @@ export default function ProductsPage() {
                             View details
                           </button>
                           <button
-                            onClick={() => dispatch(addToCart(product.id))}
+                            onClick={() => dispatch(addToCart({ productId: product.id }))}
                             className="inline-flex items-center rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
                           >
                             Add to cart

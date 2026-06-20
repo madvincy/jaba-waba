@@ -87,6 +87,13 @@ export function ProductDetailOne({ product }: ProductDetailProps) {
 		? displayPrice - (detailProduct.discount ?? 0)
 		: displayPrice;
 
+	// Find selected variant and its price
+	const selectedVariant = (detailProduct.variants ?? []).find(
+		(v) => v.name === selectedOption
+	);
+	const variantPrice = selectedVariant?.price ?? null;
+	const effectivePrice = variantPrice ?? discountedPrice;
+
 	return (
 		<div className="w-full max-w-6xl mx-auto p-6 not-prose">
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -158,7 +165,7 @@ export function ProductDetailOne({ product }: ProductDetailProps) {
 						) : null}
 						<div className="text-3xl font-bold text-green-600">
 							{detailProduct.currency}
-							{discountedPrice.toFixed(1)}
+						{effectivePrice.toFixed(1)}
 						</div>
 						{showDiscount ? (
 							<div className="text-sm line-through text-slate-400">
@@ -219,7 +226,17 @@ export function ProductDetailOne({ product }: ProductDetailProps) {
 								Book on WhatsApp
 							</a>
 						) : (
-							<Button size="lg" onClick={() => detailProduct.id && dispatch(addToCart(detailProduct.id))}>
+							<Button 
+								size="lg" 
+								onClick={() => {
+									if (!detailProduct.id) return;
+									dispatch(addToCart({
+										productId: detailProduct.id,
+										variantId: selectedVariant?.id,
+										variantPrice: variantPrice ?? undefined
+									}));
+								}}
+							>
 								Add to cart
 							</Button>
 						)}

@@ -279,7 +279,7 @@ export function ProductSlider() {
               {slide.price}
             </span>
             <button
-              onClick={() => dispatch(addToCart(slide.id))}
+              onClick={() => dispatch(addToCart({ productId: slide.id }))}
               className="rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-105 active:scale-95"
               style={{ background: `linear-gradient(135deg, ${t.from}, ${t.to})` }}
             >

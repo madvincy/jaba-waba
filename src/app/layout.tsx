@@ -23,11 +23,6 @@ export const metadata = {
 export default function Layout({ children }: LayoutProps<"/">) {
 	return (
 		<html lang="en" className={geist.className} suppressHydrationWarning>
-			<Script
-				defer
-				src="https://cloud.umami.is/script.js"
-				data-website-id="7e98cb80-cce6-440e-8d23-b1a4abd6adfa"
-			/>
 			<body className="flex flex-col min-h-screen p-">
 				<ThemeProvider>
 					<RootProvider>

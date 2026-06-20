@@ -38,7 +38,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mpesa");
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartSubtotal = cart.reduce((sum, item) => sum + (item.variantPrice ?? item.price) * item.quantity, 0);
   const deliveryFee = distance ? distance * DELIVERY_RATE_PER_KM : 0;
   const tax = Number((cartSubtotal * 0.08).toFixed(2));
   const total = Number((cartSubtotal + deliveryFee + tax).toFixed(2));
@@ -335,6 +335,11 @@ export default function CheckoutPage() {
                             <p className="font-medium text-sm text-slate-900 dark:text-white">
                               {item.name}
                             </p>
+                            {item.selectedVariantId && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {item.variants?.find(v => v.id === item.selectedVariantId)?.name || 'Variant'}
+                              </p>
+                            )}
                             <div className="flex items-center gap-2 mt-2">
                               <Button
                                 variant="ghost"
@@ -373,7 +378,7 @@ export default function CheckoutPage() {
                           </div>
                           <div className="text-right">
                             <p className="font-semibold text-sm text-slate-900 dark:text-white">
-                              KSH {(item.price * item.quantity).toFixed(2)}
+                              KSH {((item.variantPrice ?? item.price) * item.quantity).toFixed(2)}
                             </p>
                             <Button
                               variant="ghost"

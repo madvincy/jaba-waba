@@ -21,9 +21,13 @@ export function mapProduct(row: DbProduct): Product {
     category: row.category as ProductCategory,
     description: row.description,
     price: Number(row.price),
-    image: row.image,
-    stock: row.stock,
-    tags: row.tags ?? [],
+    image: (row as any).image,
+    stock: (row as any).stock ?? 0,
+    tags: (row as any).tags ?? [],
+    images: (row as any).images ?? [],
+    variants: (row as any).variants ?? [],
+    totalStock: (row as any).totalStock ?? (row as any).stock ?? 0,
+    available: (row as any).available ?? ((row as any).stock ?? 0) > 0,
   };
 }
 

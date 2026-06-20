@@ -11,6 +11,7 @@
     "format": "biome format --write",
     "registry:build": "shadcn build",
     "db:seed": "curl -X POST http://localhost:3000/api/seed"
+    ,"populate:variants": "node scripts/populate_product_variants.js"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.17.12",

@@ -26,9 +26,24 @@ export type Product = {
   tags: string[];
   discount?: number;
   rating?: number;
+  images?: string[];
+  variants?: {
+    id: string;
+    name: string;
+    sku?: string;
+    price?: number | null;
+    quantity?: number;
+    available?: boolean;
+  }[];
+  totalStock?: number;
+  available?: boolean;
 };
 
-export type CartItem = Product & { quantity: number };
+export type CartItem = Product & { 
+  quantity: number;
+  selectedVariantId?: string;
+  variantPrice?: number;
+};
 
 export type StoreLocation = {
   id: string;
@@ -91,6 +106,7 @@ export type Order = {
   items: CartItem[];
   total: number;
   createdAt: string;
+  variantDetails?: Record<string, { variantId: string; variantName: string; price: number }>;
 };
 
 export type Category = {
@@ -317,14 +333,32 @@ const shopSlice = createSlice({
     setDataError(state, action: PayloadAction<string | null>) {
       state.dataError = action.payload;
     },
-    addToCart(state, action: PayloadAction<string>) {
-      const product = state.products.find((item) => item.id === action.payload);
+    addToCart(state, action: PayloadAction<{ productId: string; variantId?: string; variantPrice?: number }>) {
+      const product = state.products.find((item) => item.id === action.payload.productId);
       if (!product) return;
-      const existing = state.cart.find((item) => item.id === product.id);
+
+      let variantId = action.payload.variantId;
+      let variantPrice = action.payload.variantPrice;
+
+      if (!variantId && product.variants?.length === 1) {
+        const singleVariant = product.variants[0];
+        variantId = singleVariant.id;
+        variantPrice = singleVariant.price ?? product.price;
+      }
+
+      const existing = state.cart.find((item) => {
+        if (item.id !== product.id) return false;
+        return (item.selectedVariantId || 'default') === (variantId || 'default');
+      });
       if (existing) {
         existing.quantity += 1;
       } else {
-        state.cart.push({ ...product, quantity: 1 });
+        state.cart.push({ 
+          ...product, 
+          quantity: 1,
+          selectedVariantId: variantId,
+          variantPrice,
+        });
       }
     },
     removeFromCart(state, action: PayloadAction<string>) {
