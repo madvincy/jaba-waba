@@ -1,1 +1,12 @@
 node_modules
+
+# Environment files
+# Ignore all env files but keep the example
+.env
+!.env.example
+.env.local
+.env.*.local
+.env.production
+
+# Next.js build output
+.next

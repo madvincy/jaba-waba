@@ -1,0 +1,28 @@
+# Supabase local development config
+# Install CLI: npm i -g supabase
+# Link project:  supabase link --project-ref <your-ref>
+# Push schema:   supabase db push
+# Seed data:     supabase db seed
+
+[project]
+id = "commercn"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+
+[auth.external.google]
+enabled = true
