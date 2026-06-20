@@ -24,6 +24,7 @@ export type Product = {
   image: string;
   stock: number;
   tags: string[];
+  discount?: number;
 };
 
 export type CartItem = Product & { quantity: number };
