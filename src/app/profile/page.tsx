@@ -108,7 +108,7 @@ export default function ProfilePage() {
         updateUser({
           name: profileData.name,
           phone: profileData.phone,
-          deliveryAddress: profileData.deliveryAddress,
+          delivery_address: profileData.deliveryAddress,
           location: profileData.location,
         }),
       );
