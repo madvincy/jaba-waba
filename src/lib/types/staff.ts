@@ -3,11 +3,11 @@
 
 export type UserRole = "admin" | "store-manager" | "rider" | "dispatch";
 export type UserStatus = "online" | "offline" | "delivering" | "available";
-export type OrderStatus = "paid" | "preparing" | "on the way" | "delivered" | "cancelled";
+export type OrderStatus = "pending" | "confirmed" | "preparing" | "on_the_way" | "delivered";
 export type DeliveryStatus = "pending" | "picked_up" | "on_the_way" | "delivered" | "cancelled";
 export type EventStatus = "active" | "planning" | "closed" | "cancelled";
 export type ProductCategory = "juice" | "merch" | "pack";
-export type PaymentMethod = "cash" | "mpesa" | "card";
+export type PaymentMethod = "mpesa" | "stripe";
 export type SaleStatus = "completed" | "refunded" | "pending";
 
 // ── Database row types (match Supabase columns exactly) ──────────────────
@@ -84,7 +84,8 @@ export type DbOrder = {
   total: number;
   status: OrderStatus;
   assigned_rider_id: string | null;
-  address: string;
+  delivery_address: string;
+  payment_method: PaymentMethod;
   created_at: string;
   updated_at: string;
 };

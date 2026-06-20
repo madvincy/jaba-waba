@@ -25,6 +25,8 @@ interface User {
   email: string;
 }
 
+type PaymentMethod = "cash" | "mpesa" | "card";
+
 interface Product {
   id: string;
   name: string;
@@ -32,6 +34,7 @@ interface Product {
   price: number;
   stock: Record<string, number>;
   sku: string;
+  image: string;
 }
 
 interface Event {
@@ -62,6 +65,7 @@ interface Order {
   items: string[];
   total: number;
   status: "paid" | "preparing" | "on the way" | "delivered" | "cancelled";
+  paymentMethod: PaymentMethod;
   assignedRider: string | null;
   day: "Today" | "Yesterday";
   address: string;
@@ -518,7 +522,7 @@ function OrdersTab({
   const riders = users.filter(u => u.role === "rider");
   const filtered = orders.filter(o => dayFilter === "All" || o.day === dayFilter);
 
-  const openNew = () => setModal({ id: uid(), customer: "", storeId: stores[0]?.id || "", items: [], total: 0, status: "paid", assignedRider: null, day: "Today", address: "" });
+  const openNew = () => setModal({ id: uid(), customer: "", storeId: stores[0]?.id || "", items: [], total: 0, status: "paid", paymentMethod: "mpesa", assignedRider: null, day: "Today", address: "" });
   const openEdit = (o: Order) => setModal({ ...o });
 
   const handleSave = async () => {
@@ -575,6 +579,7 @@ function OrdersTab({
           <Field label="Address"><StaffInput value={modal.address} onChange={v => setModal({ ...modal, address: v })} placeholder="Delivery address" /></Field>
           <Field label="Store"><StaffSelect value={modal.storeId} onChange={v => setModal({ ...modal, storeId: v })}>{stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</StaffSelect></Field>
           <Field label="Status"><StaffSelect value={modal.status} onChange={v => setModal({ ...modal, status: v as Order["status"] })}>{["paid", "preparing", "on the way", "delivered", "cancelled"].map(s => <option key={s} value={s}>{s}</option>)}</StaffSelect></Field>
+          <Field label="Payment Method"><StaffSelect value={modal.paymentMethod} onChange={v => setModal({ ...modal, paymentMethod: v as Order["paymentMethod"] })}>{["mpesa", "card", "cash"].map(method => <option key={method} value={method}>{method.toUpperCase()}</option>)}</StaffSelect></Field>
           <Field label="Total (KSh)"><StaffInput type="number" value={modal.total} onChange={v => setModal({ ...modal, total: Number(v) })} /></Field>
           <Field label="Assign Rider">
             <StaffSelect value={modal.assignedRider || ""} onChange={v => setModal({ ...modal, assignedRider: v || null })}>
@@ -770,7 +775,7 @@ function ProductsTab({
   const [catFilter, setCatFilter] = useState("all");
   const [saving, setSaving] = useState(false);
 
-  const openNew = () => { const stock: Record<string, number> = {}; stores.forEach(s => (stock[s.id] = 0)); setModal({ id: uid(), name: "", category: "juice", price: 0, stock, sku: "" }); };
+  const openNew = () => { const stock: Record<string, number> = {}; stores.forEach(s => (stock[s.id] = 0)); setModal({ id: uid(), name: "", category: "juice", price: 0, stock, sku: "", image: "" }); };
   const openEdit = (p: Product) => setModal({ ...p, stock: { ...p.stock } });
 
   const handleSave = async () => {
@@ -799,8 +804,13 @@ function ProductsTab({
           const totalStock = Object.values(p.stock).reduce((a, b) => a + b, 0);
           return (
             <Card key={p.id}>
-              <div className="mb-2 flex items-start justify-between">
-                <div>
+              <div className="mb-2 flex items-start justify-between gap-3">
+                {p.image ? (
+                  <img src={p.image} alt={p.name} className="h-24 w-24 rounded-2xl object-cover" />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-slate-700 bg-slate-950 text-xs text-slate-500">No Image</div>
+                )}
+                <div className="flex-1">
                   <Badge label={p.category} color={p.category === "juice" ? colors.lime : colors.purple} />
                   <div className="mt-2 font-bold text-slate-200">{p.name}</div>
                   <div className="mt-0.5 text-xs text-slate-400">SKU: {p.sku}</div>
@@ -835,6 +845,7 @@ function ProductsTab({
           <Field label="Product Name"><StaffInput value={modal.name} onChange={v => setModal({ ...modal, name: v })} placeholder="Product name" /></Field>
           <Field label="SKU"><StaffInput value={modal.sku} onChange={v => setModal({ ...modal, sku: v })} placeholder="e.g. JW-JUC-003" /></Field>
           <Field label="Category"><StaffSelect value={modal.category} onChange={v => setModal({ ...modal, category: v as Product["category"] })}>{["juice", "merch", "pack"].map(c => <option key={c} value={c}>{c}</option>)}</StaffSelect></Field>
+          <Field label="Image URL"><StaffInput value={modal.image} onChange={v => setModal({ ...modal, image: v })} placeholder="https://..." /></Field>
           <Field label="Price (KSh)"><StaffInput type="number" value={modal.price} onChange={v => setModal({ ...modal, price: Number(v) })} /></Field>
           <div className="mb-2 text-xs uppercase tracking-wide text-slate-400">Stock per store</div>
           {stores.map(s => (
@@ -1237,6 +1248,8 @@ export default function StaffDashboard() {
           customer: o.customer_name,
           storeId: o.store_id,
           assignedRider: o.assigned_rider_id,
+          paymentMethod: o.payment_method ?? "mpesa",
+          address: o.delivery_address ?? "",
           day: new Date(o.created_at).toDateString() === today ? "Today"
             : new Date(o.created_at).toDateString() === yesterday ? "Yesterday"
               : "Yesterday",
@@ -1282,7 +1295,16 @@ export default function StaffDashboard() {
 
   // ── CRUD helpers ────────────────────────────────────────────────────
   const saveOrder = useCallback(async (order: Order) => {
-    const payload = { customer_name: order.customer, store_id: order.storeId, items: order.items, total: order.total, status: order.status, assigned_rider_id: order.assignedRider, address: order.address };
+    const payload = {
+      customer_name: order.customer,
+      store_id: order.storeId,
+      items: order.items,
+      total: order.total,
+      status: order.status,
+      payment_method: order.paymentMethod,
+      assigned_rider_id: order.assignedRider,
+      address: order.address,
+    };
     const existing = orders.find(o => o.id === order.id);
     if (existing) { await supabase.from("orders").update(payload).eq("id", order.id); }
     else { await supabase.from("orders").insert({ ...payload }); }
