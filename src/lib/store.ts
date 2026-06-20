@@ -25,6 +25,7 @@ export type Product = {
   stock: number;
   tags: string[];
   discount?: number;
+  rating?: number;
 };
 
 export type CartItem = Product & { quantity: number };

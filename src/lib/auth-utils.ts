@@ -75,7 +75,7 @@ export function buildUserStateFromAuth(
     role: role === "customer" && inferredRole !== "customer" ? inferredRole : role,
     storeId: profile?.store_id ?? (role === "staff" ? "store-central" : undefined),
     phone: profile?.phone ?? (user.user_metadata?.phone as string | undefined) ?? "",
-    deliveryAddress: profile?.delivery_address ?? "",
+    delivery_address: profile?.delivery_address ?? "",
     location: profile?.location ?? "",
   };
 }
