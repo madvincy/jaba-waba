@@ -42,6 +42,7 @@ export type Product = {
 export type CartItem = Product & { 
   quantity: number;
   selectedVariantId?: string;
+  selectedVariantName?: string;
   variantPrice?: number;
 };
 
@@ -333,12 +334,13 @@ const shopSlice = createSlice({
     setDataError(state, action: PayloadAction<string | null>) {
       state.dataError = action.payload;
     },
-    addToCart(state, action: PayloadAction<{ productId: string; variantId?: string; variantPrice?: number }>) {
+    addToCart(state, action: PayloadAction<{ productId: string; variantId?: string; variantPrice?: number; quantity?: number }>) {
       const product = state.products.find((item) => item.id === action.payload.productId);
       if (!product) return;
 
       let variantId = action.payload.variantId;
       let variantPrice = action.payload.variantPrice;
+      const quantity = action.payload.quantity ?? 1;
 
       if (!variantId && product.variants?.length === 1) {
         const singleVariant = product.variants[0];
@@ -351,12 +353,14 @@ const shopSlice = createSlice({
         return (item.selectedVariantId || 'default') === (variantId || 'default');
       });
       if (existing) {
-        existing.quantity += 1;
+        existing.quantity += quantity;
       } else {
+        const selectedVariantName = product.variants?.find((variant) => variant.id === variantId)?.name;
         state.cart.push({ 
           ...product, 
-          quantity: 1,
+          quantity,
           selectedVariantId: variantId,
+          selectedVariantName,
           variantPrice,
         });
       }

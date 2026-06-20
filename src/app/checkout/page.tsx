@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAppDispatch, useAppSelector } from "@/lib/redux-hooks";
 import { removeFromCart, updateCartQuantity } from "@/lib/store";
 import { MapPin, Truck, CreditCard, AlertCircle } from "lucide-react";
+import { GoogleLocationPicker, GoogleLocation } from "@/components/google-location-picker";
 
 type PaymentMethod = "mpesa" | "stripe";
 
@@ -29,7 +30,8 @@ export default function CheckoutPage() {
   const cart = useAppSelector((state) => state.shop.cart);
   const user = useAppSelector((state) => state.shop.user);
 
-  const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState<string>("");
+  const [deliveryCoordinates, setDeliveryCoordinates] = useState<GoogleLocation | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [calculatingDistance, setCalculatingDistance] = useState(false);
   const [customerName, setCustomerName] = useState(user?.name || "");
@@ -37,6 +39,7 @@ export default function CheckoutPage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mpesa");
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const cartSubtotal = cart.reduce((sum, item) => sum + (item.variantPrice ?? item.price) * item.quantity, 0);
   const deliveryFee = distance ? distance * DELIVERY_RATE_PER_KM : 0;
@@ -45,34 +48,38 @@ export default function CheckoutPage() {
 
   // Simulate Google Maps distance calculation
   const calculateDistance = async () => {
-    if (!deliveryLocation.trim()) {
-      alert("Please enter a delivery location");
+    setLocationError(null);
+
+    if (!deliveryCoordinates) {
+      setLocationError("Please select a delivery location on the map.");
       return;
     }
 
     setCalculatingDistance(true);
     try {
-      // In a real application, this would call Google Maps Distance Matrix API
-      // For now, we'll simulate a distance calculation
-      // Formula: Random distance between 2-15 km (simulating Nairobi delivery zones)
-      const simulatedDistance = Math.random() * 13 + 2;
+      const response = await fetch("/api/distance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          destination: deliveryCoordinates,
+        }),
+      });
 
-      // In production:
-      // const response = await fetch('/api/calculate-distance', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     origin: DELIVERY_ORIGIN,
-      //     destination: deliveryLocation
-      //   })
-      // });
-      // const data = await response.json();
-      // setDistance(data.distanceInKm);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to calculate distance");
+      }
 
-      setDistance(Number(simulatedDistance.toFixed(1)));
+      const data = await response.json();
+      setDistance(Number(data.distanceInKm?.toFixed(1)));
     } catch (error) {
       console.error("Error calculating distance:", error);
-      alert("Could not calculate distance. Please try again.");
+      setLocationError(
+        error instanceof Error
+          ? error.message
+          : "Could not calculate distance. Please try again."
+      );
+      setDistance(null);
     } finally {
       setCalculatingDistance(false);
     }
@@ -83,8 +90,8 @@ export default function CheckoutPage() {
       alert("Please fill in your name and email");
       return;
     }
-    if (!deliveryLocation || distance === null) {
-      alert("Please enter a delivery location and calculate distance");
+    if (!deliveryLocation || !deliveryCoordinates || distance === null) {
+      alert("Please select a delivery location on the map and calculate delivery fee.");
       return;
     }
     setOrderPlaced(true);
@@ -207,18 +214,38 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 <div>
-                  <Label htmlFor="location" className="mb-2">Delivery address</Label>
-                  <Textarea
-                    id="location"
+                  <Label htmlFor="selected-location" className="mb-2">Selected delivery address</Label>
+                  <Input
+                    id="selected-location"
                     value={deliveryLocation}
-                    onChange={(e) => setDeliveryLocation(e.target.value)}
-                    placeholder="Enter your full delivery address (e.g., Plot 123, Karen Road, Nairobi)"
-                    rows={3}
+                    readOnly
+                    placeholder="Select a location on the map or search above"
                   />
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    Include street name, plot number, and landmarks if possible
+                    Use the map search box or click a point on the map to select delivery.
                   </p>
                 </div>
+
+                <GoogleLocationPicker
+                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
+                  value={deliveryCoordinates}
+                  onChange={(location) => {
+                    setDeliveryCoordinates(location);
+                    setDeliveryLocation(location.address);
+                    setLocationError(null);
+                    // Auto-calculate delivery whenever a valid location is selected
+                    calculateDistance().catch(() => {
+                      // calculateDistance already sets error state
+                    });
+                  }}
+                />
+
+                {locationError ? (
+                  <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950 p-3 text-sm text-red-700 dark:text-red-200">
+                    {locationError}
+                  </div>
+                ) : null}
+
                 <Button
                   onClick={calculateDistance}
                   disabled={calculatingDistance}
@@ -335,11 +362,15 @@ export default function CheckoutPage() {
                             <p className="font-medium text-sm text-slate-900 dark:text-white">
                               {item.name}
                             </p>
-                            {item.selectedVariantId && (
+                            {item.selectedVariantName ? (
                               <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {item.variants?.find(v => v.id === item.selectedVariantId)?.name || 'Variant'}
+                                {item.selectedVariantName}
                               </p>
-                            )}
+                            ) : item.selectedVariantId ? (
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {item.variants?.find((v) => v.id === item.selectedVariantId)?.name || "Variant"}
+                              </p>
+                            ) : null}
                             <div className="flex items-center gap-2 mt-2">
                               <Button
                                 variant="ghost"

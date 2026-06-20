@@ -30,7 +30,6 @@ const defaultProduct: ProductDetailProps["product"] = {
 		"https://images.unsplash.com/photo-1508747703725-7197e5119a04?auto=format&fit=crop&q=80&w=900",
 		"https://images.unsplash.com/photo-1543353071-087092ec393a?auto=format&fit=crop&q=80&w=900",
 	],
-	sizes: ["500ml", "1L", "2L"],
 	ticketPhone: "254700000000",
 };
 
@@ -45,8 +44,10 @@ export function ProductDetailOne({ product }: ProductDetailProps) {
 	const isMerch = detailProduct.category === "Merch";
 	const isEvent = detailProduct.category === "Event";
 
-	const options = isJuice
-		? ["500ml", "1L", "2L"]
+	const options = detailProduct.variants?.length
+		? detailProduct.variants.map((variant) => variant.name)
+		: isJuice
+		? detailProduct.sizes ?? ["500ml", "1L", "2L"]
 		: isMerch
 		? detailProduct.sizes ?? ["S", "M", "L", "XL"]
 		: isEvent
@@ -56,8 +57,8 @@ export function ProductDetailOne({ product }: ProductDetailProps) {
 	useEffect(() => {
 		setCurrentImageIndex(0);
 		setQuantity(1);
-		setSelectedOption(options[0]);
-	}, [product]);
+		setSelectedOption(options[0] ?? "");
+	}, [product, options]);
 
 	const nextImage = () => {
 		setCurrentImageIndex((prev) =>
@@ -93,6 +94,8 @@ export function ProductDetailOne({ product }: ProductDetailProps) {
 	);
 	const variantPrice = selectedVariant?.price ?? null;
 	const effectivePrice = variantPrice ?? discountedPrice;
+	const selectedVariantId = selectedVariant?.id;
+	const selectedVariantName = selectedVariant?.name;
 
 	return (
 		<div className="w-full max-w-6xl mx-auto p-6 not-prose">
@@ -232,8 +235,8 @@ export function ProductDetailOne({ product }: ProductDetailProps) {
 									if (!detailProduct.id) return;
 									dispatch(addToCart({
 										productId: detailProduct.id,
-										variantId: selectedVariant?.id,
-										variantPrice: variantPrice ?? undefined
+									variantId: selectedVariantId,
+									variantPrice: variantPrice ?? undefined,
 									}));
 								}}
 							>

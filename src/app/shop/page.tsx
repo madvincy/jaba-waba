@@ -473,11 +473,15 @@ export default function ShopPage() {
                             </div>
                             <div className="mt-4 flex items-center justify-between gap-3">
                               <div>
-                                {item.selectedVariantId && (
+                                {item.selectedVariantName ? (
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    {item.selectedVariantName}
+                                  </p>
+                                ) : item.selectedVariantId ? (
                                   <p className="text-xs text-slate-500 dark:text-slate-400">
                                     {item.variants?.find((v) => v.id === item.selectedVariantId)?.name || "Selected variant"}
                                   </p>
-                                )}
+                                ) : null}
                                 <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-950">
                                   <Button
                                     variant="ghost"

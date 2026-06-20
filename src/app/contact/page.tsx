@@ -233,22 +233,23 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* Map Placeholder */}
+          {/* Static Map */}
           <div>
             <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">
               Find Us
             </h2>
-            <div className="w-full h-96 rounded-3xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-2" />
-                <p className="text-slate-500 dark:text-slate-400">
-                  Embedded Google Map Coming Soon
-                </p>
-                <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">
-                  Freedom Heights, Langata, Nairobi
-                </p>
-              </div>
+            <div className="w-full h-96 rounded-3xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+              <iframe
+                title="JabaWaba Location"
+                className="w-full h-full border-0"
+                loading="lazy"
+                allowFullScreen
+                src={`https://www.google.com/maps?q=-1.3348,36.7419&z=15&output=embed`}
+              />
             </div>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+              Freedom Heights, Langata, Nairobi
+            </p>
           </div>
         </div>
       </main>

@@ -1,4 +1,5 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
+// @ts-ignore: side-effect import of global CSS without explicit module declarations
 import "./global.css";
 import { Syne } from "next/font/google";
 import Head from "next/head";

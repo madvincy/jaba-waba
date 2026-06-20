@@ -266,7 +266,7 @@ export default function HomePage() {
                     className="bg-green-600 hover:bg-green-700 text-white rounded-lg"
                     onClick={() => dispatch(addToCart({ productId: product.id }))}
                   >
-                    Add
+                    Add to Cart
                   </Button>
                 </div>
               </CardContent>
